@@ -1,6 +1,7 @@
 
 package uk.ac.ed.inf;
 
+import java.awt.*;
 import java.io.IOException;
 
 import com.google.gson.Gson;
@@ -11,38 +12,22 @@ import java.lang.reflect.Type;
 import java.net.URI;
 import java.net.http.*;
 
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.HashSet;
-import java.util.Set;
+import java.util.*;
+import java.util.List;
 
 
 public class Menus {
-    String machine;
-    String port;
-    String urlString;
+    public static String machine;
+    public static String port;
+    public static String urlString;
+    public static HashMap<String,Integer> cost=new HashMap();
+    public static HashMap<String,String> location = new HashMap<>();
+
+
+
     //  One HttpClient shared between all HttpRequests, to avoid repeated thread starts
     private static final HttpClient client = HttpClient.newHttpClient();
-
-    /**
-     * Constructor of the class Menus, also constructs the general url from the parameters
-     * @param machine : ip address of the machine to request data
-     * @param port : the port number in the ip where the site is situated
-     */
-    public Menus(String machine,String port){
-        this.machine = machine;
-        this.port = port;
-        this.urlString = "http://"+this.machine+":"+this.port;
-    }
-
-    /**
-     *  Calculates the total delivery cost from the order given
-     *  sends a GET request to the site to get the menu,
-     *  a JSON file is received which is parsed and iterated to find the total cost
-     * @param items : all the items that have been ordered
-     * @return : an integer which is the total cost of all the things that have been ordered
-     */
-    public int getDeliveryCost(String... items)  {
+    public static void prepare_menus(){
         // HttpRequest assumes that it is a GET request by default.
         HttpRequest request = HttpRequest.newBuilder()
                 .uri(URI.create(urlString+"/menus/menus.json"))
@@ -51,8 +36,7 @@ public class Menus {
             // Sends the GET request to the site
             HttpResponse<String> response =
                     client.send(request, HttpResponse.BodyHandlers.ofString());
-            // Sets/HashSets have good look-up, making it ideal for contains operator
-            Set<String> itemSet = new HashSet<>(Arrays.asList(items));
+
             /* Initialises new GSON for parsing
                ArrayList is used, as it is an array of JSONs
                Uses TypeToken and Type for getting the type
@@ -65,31 +49,54 @@ public class Menus {
                     gson.fromJson(response.body(), listType);
 
             // 50p Delivery charge by default
-            int cost =50;
+
             // To-do: maybe remove redundant searches after 4 orders break the loop
             // Class specific iterator, cleaner to iterate
             for(Places place : places){
                 // Takes the important field of the class
                 Places.menu[] current_place = place.menu;
-                // functional programming logic for iterating through classes, sums the costs of all the items it finds
-                int place_cost = Arrays.stream(current_place)
-                        // filters the class array and pass only the objects that contains the item
-                        .filter(pl -> itemSet.contains(pl.item))
-                        // takes only the pence field of the class object
-                        .map(x -> x.pence)
-                        // Sums up all the pence field
-                        .mapToInt(Integer::intValue).sum();
-                cost+=place_cost;
+                for(Places.menu menu : place.menu){
+                    cost.put(menu.item, menu.pence);
+                    location.put(menu.item,place.location);
+                }
+
 
             }
-            return cost;
-        }
-        // necessary catch statement if the request to the site failed
+    } // necessary catch statement if the request to the site failed
         catch (IOException | InterruptedException e){
             e.printStackTrace();
         }
-        // returns 1 if failed
-        return 1;
     }
+
+
+    /**
+     * Constructor of the class Menus, also constructs the general url from the parameters
+     * @param machine : ip address of the machine to request data
+     * @param port : the port number in the ip where the site is situated
+     */
+    public Menus(String machine,String port){
+        this.machine = machine;
+        this.port = port;
+        this.urlString = "http://"+this.machine+":"+this.port;
+        prepare_menus();
+
+    }
+
+    /**
+     *  Calculates the total delivery cost from the order given
+     *  sends a GET request to the site to get the menu,
+     *  a JSON file is received which is parsed and iterated to find the total cost
+     * @param items : all the items that have been ordered
+     * @return : an integer which is the total cost of all the things that have been ordered
+     */
+    public int getDeliveryCost(String... items)  {
+        List<String> items1 = Arrays.asList(items);
+        int cost1 =50;
+        for (int i = 0; i < items.length; i++) {
+            cost1+=cost.get(items1.get(i));
+        }
+            return cost1;
+        }
+
 
 }
