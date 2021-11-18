@@ -69,4 +69,34 @@ public class LongLat {
         double new_latitude = latitude + ( 0.00015 * ( Math.sin( Math.toRadians(angle) ) ));
         LongLat new_cordinates =   new LongLat(new_longitude,new_latitude);
         return new_cordinates; }
+    public LongLat shorter(int angle){
+        // Condition to check if the drone needs to hover on the same position
+        if(angle==-999){
+            // returns the same coordinate if condition true
+            return new LongLat(longitude,latitude);
+        }
+        // angle has to be radians for trigonometry java functions, drone moves 0.00015 each move
+        //  calculates adjacent distance of the equilateral triangle and adds it to the coordinate longitude
+        double new_longitude = longitude + ( 0.00006 * ( Math.cos(Math.toRadians(angle) ) ));
+        // calculates the opposite distance of the equilateral triangle and adds it to the coordinates latitude
+        double new_latitude = latitude + ( 0.00006 * ( Math.sin( Math.toRadians(angle) ) ));
+        LongLat new_cordinates =   new LongLat(new_longitude,new_latitude);
+        return new_cordinates; }
+    public int angle(LongLat L){
+        int a=-99;
+        for (int i = 0; i < 360; i=i+10) {
+            LongLat nL = L.nextPosition(i);
+            if(nL.longitude==this.longitude && this.latitude==nL.latitude){
+              a = i;
+            }
+        }
+        return a;
+    }
+
+    public static void main(String[] args) {
+        LongLat L = new LongLat(-3.1865508,55.9457207);
+        LongLat L1 = new LongLat(-3.1864008,55.9457207);
+        System.out.println(L1.angle(L));
+
+    }
 }
