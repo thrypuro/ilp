@@ -89,11 +89,10 @@ public class Menus {
      * @param items : all the items that have been ordered
      * @return : an integer which is the total cost of all the things that have been ordered
      */
-    public int getDeliveryCost(String... items)  {
-        List<String> items1 = Arrays.asList(items);
+    public int getDeliveryCost(ArrayList<String> items)  {
         int cost1 =50;
-        for (int i = 0; i < items.length; i++) {
-            cost1+=cost.get(items1.get(i));
+        for (int i = 0; i < items.size(); i++) {
+            cost1+=cost.get(items.get(i));
         }
             return cost1;
         }

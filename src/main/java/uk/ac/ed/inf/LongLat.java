@@ -77,13 +77,16 @@ public class LongLat {
         }
         // angle has to be radians for trigonometry java functions, drone moves 0.00015 each move
         //  calculates adjacent distance of the equilateral triangle and adds it to the coordinate longitude
-        double new_longitude = longitude + ( 0.00006 * ( Math.cos(Math.toRadians(angle) ) ));
+        double new_longitude = longitude + ( 0.00005 * ( Math.cos(Math.toRadians(angle) ) ));
         // calculates the opposite distance of the equilateral triangle and adds it to the coordinates latitude
-        double new_latitude = latitude + ( 0.00006 * ( Math.sin( Math.toRadians(angle) ) ));
+        double new_latitude = latitude + ( 0.00005 * ( Math.sin( Math.toRadians(angle) ) ));
         LongLat new_cordinates =   new LongLat(new_longitude,new_latitude);
         return new_cordinates; }
     public int angle(LongLat L){
         int a=-99;
+        if(this.longitude==L.longitude && this.latitude==L.latitude){
+            return -999;
+        }
         for (int i = 0; i < 360; i=i+10) {
             LongLat nL = L.nextPosition(i);
             if(nL.longitude==this.longitude && this.latitude==nL.latitude){
@@ -92,7 +95,30 @@ public class LongLat {
         }
         return a;
     }
+    public LongLat calculate_midpoint(LongLat L){
+        double lo = -Math.abs(L.longitude-this.longitude);
+        double la = Math.abs(L.latitude-this.latitude);
+        lo = L.longitude + lo/2;
+        la = L.latitude + la/2;
+        LongLat LL = new LongLat(lo,la);
+        return LL;
+    }
+    public boolean is_straight_line(LongLat L){
+        LongLat LL = new LongLat(this.longitude,this.latitude);
+        int i =0;
 
+        while (!LL.closeTo(L) && i<1000) {
+            double angle=Math.toDegrees(Math.atan2((L.latitude-latitude),(L.longitude-longitude)));
+            LL.latitude = LL.latitude + ( 0.00015 * ( Math.sin( Math.toRadians(angle) ) ));
+            LL.longitude = LL.longitude + ( 0.00015 * ( Math.cos(Math.toRadians(angle) ) ));
+
+            if(Move_to_Point.in_Polygon(LL)){
+                return false;
+            }
+            i+=1;
+        }
+        return true;
+    }
     public static void main(String[] args) {
         LongLat L = new LongLat(-3.1865508,55.9457207);
         LongLat L1 = new LongLat(-3.1864008,55.9457207);

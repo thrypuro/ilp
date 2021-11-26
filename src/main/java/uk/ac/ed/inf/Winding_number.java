@@ -40,27 +40,7 @@ public class Winding_number {
                 Polygons.add(Poly);
             }
 
-           /* Pointloc P [] = { new Pointloc(-3.1909972429275513,
-                    55.945270802193505), new Pointloc(-3.1910938024520874,
-                    55.94400610124359),new Pointloc(-3.1878215074539185,
-                    55.9444957647059),new Pointloc(-3.187955617904663,
-                    55.944766128381815), new Pointloc(-3.1884652376174922,
-                    55.94509657031137),new Pointloc(-3.189103603363037,
-                    55.945204714330494), new Pointloc( -3.1892913579940796,
-                    55.9455471683987)};*/
-            /*Pointloc P [] = { new Pointloc(-3.1910455226898193,
-                    55.94426144799335), new Pointloc(-3.1891465187072754,
-                    55.94426144799335),new Pointloc(-3.1891465187072754,
-                    55.945312858047615),new Pointloc(-3.1910455226898193,
-                    55.945312858047615), new Pointloc(-3.1884652376174922,
-                    55.94509657031137),new Pointloc( -3.1910455226898193,
-                    55.94426144799335)};
-            Vector <Pointloc> Poly = new Vector<>();
-            for (int i = 0; i <P.length ; i++) {
-                Poly.add(P[i]);
 
-            }
-            Polygons.add(Poly);*/
         } catch (IOException | InterruptedException e) {
             e.printStackTrace();
         }

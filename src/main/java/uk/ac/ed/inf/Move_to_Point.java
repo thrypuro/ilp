@@ -1,12 +1,10 @@
 package uk.ac.ed.inf;
 import com.mapbox.geojson.*;
 
-import java.lang.Math;
 import java.util.*;
-public class move_to_point  {
+public class Move_to_Point {
     public static LongLat Landmark_1 = new LongLat(-3.1862,55.9457);
     public  static LongLat Landmark_2 = new LongLat(-3.1916,55.9437);
-    public  static LongLat personal_mark = new LongLat(-3.1911,55.9442);
 
     static public boolean in_Polygon(LongLat P){
         boolean inside = false;
@@ -57,12 +55,31 @@ public class move_to_point  {
         return total_path;
 
     }
-    public static Vector<LongLat> A_star_modified(LongLat start,LongLat goal){
+    public static double H(LongLat source,LongLat end){
+        double dx,dy,D,D2;
+        dx = Math.abs(source.longitude-end.longitude);
+        dy = Math.abs(source.latitude-end.latitude);
+        D = 0.00015;
+        D2 = Math.sqrt(2)*D;
+        double dist = D * (dx + dy) + (D2 - 2 * D) * Math.min(dx, dy);
+        return dist;
+    }
+
+    public static Vector<LongLat> A_star_modified(LongLat start,LongLat goal, boolean Euc){
         Vector S = null;
         Vector<Double> Lala = new Vector<Double>();
+        double D = 0.00015;
         Lala.add(start.longitude);
         Lala.add(start.latitude);
-        double score = start.distanceTo(goal);
+        double score = H(start,goal);
+        if(Euc){
+            score = D*start.distanceTo(goal);
+
+        }
+        score = score*1.1;
+        boolean bruh=false;
+
+
         Point_PQ start1 =  new Point_PQ(start.longitude, start.latitude,score);
         //camefrom
         HashMap<Point_PQ, Point_PQ> cameFrom = new HashMap<>();
@@ -80,7 +97,8 @@ public class move_to_point  {
         HashMap<Point_PQ, Double> fScore = new HashMap<>();
         fScore.put(start1,score);
         int Heu = 0;
-
+        int sols = 0;
+        Point_PQ Smallest=null;
         while (!openSet.isEmpty()){
             Point_PQ current = openSet.remove();
 
@@ -91,7 +109,7 @@ public class move_to_point  {
             closetSet.add(cuLala);
             openset_set.remove(cuLala);
             if(L.closeTo(goal)){
-                System.out.println("AAAAAAAAAAAAAAAAAAAAAAAA");
+
                 return reconstruct_path(cameFrom,current);
             }
             for(int i=0;i<360;i=i+10){
@@ -99,16 +117,22 @@ public class move_to_point  {
                 Vector<Double> Lala1 = new Vector<Double>();
                 Lala1.add(current_neghbor.longitude);
                 Lala1.add(current_neghbor.latitude);
-                double tenative_gScore = gScore.get(cuLala)+0.00015;
+                double tenative_gScore = gScore.get(cuLala)+0.00015*Math.tan(Math.toRadians(i));
                 boolean away_from_no_fly_zone=false;
-                double dist = current_neghbor.distanceTo(goal);
+
+                double dist = H(current_neghbor,goal);
+                if(Euc){
+                    dist = D*current_neghbor.distanceTo(goal);
+                }
+                dist = dist*1.1;
                 double temp_fscore=dist+tenative_gScore;
                 for (int j = 0; j <360 ; j=j+60) {
                     away_from_no_fly_zone= away_from_no_fly_zone||(in_Polygon(current_neghbor.shorter(j)));
                 }
+
                 if(away_from_no_fly_zone){
                     Heu+=1;
-                    if(Heu==10000){
+                    if(Heu==5000){
                         return S;
                     }
                     continue;
@@ -124,7 +148,7 @@ public class move_to_point  {
 
                     continue;
                 }
-              if( gScore.get(Lala1) == null){
+                if( gScore.get(Lala1) == null){
                     Point_PQ P = new Point_PQ(current_neghbor.longitude,current_neghbor.latitude,dist);
                     cameFrom.put(P,current);
                     gScore.put(Lala1,tenative_gScore);
@@ -158,11 +182,8 @@ public class move_to_point  {
         }
         LineString L = LineString.fromLngLats(Line);
         Geometry G = (Geometry) L;
-        System.out.println(L.toJson());
         Feature Fea = (Feature) Feature.fromGeometry(G);
-        System.out.println(Fea.toJson());
         FeatureCollection Cole = FeatureCollection.fromFeature(Fea);
-
         return Cole.toJson();
     }
     public static Vector<LongLat> extend_line_String(Vector<LongLat> V,Vector<LongLat> U ){
@@ -175,42 +196,56 @@ public class move_to_point  {
         }
         return V;
     }
+    public static Vector<LongLat> best_of_2(LongLat P,LongLat Q){
+        Vector<LongLat> V = A_star_modified(P,Q,false);
+        Vector<LongLat> U = A_star_modified(P,Q,true);
+        if(U!=null){
+            if(V==null){
+                V=U;
+            }
+            else if(U.size()<V.size()){
+                V=U;
+            }
+        }
+        return V;
+    }
     public static Vector<LongLat> get_path(LongLat P,LongLat Q){
 
-        Vector<LongLat> V = A_star_modified(P,Q);
-
+        Vector<LongLat> V = best_of_2(P,Q);
         double dist1,dist2,ldist1,ldist2;
         dist1 = P.distanceTo(Landmark_1);
         ldist1 = Landmark_1.distanceTo(Q);
         dist2 = P.distanceTo(Landmark_2);
         ldist2 = Landmark_2.distanceTo(Q);
-        double dist3,ldist3;
-        dist3 = P.distanceTo(personal_mark);
-        ldist3 = personal_mark.distanceTo(P);
+
+        boolean foundpath = true;
+
+        if(V==null ){
+            foundpath=false;
 
 
-        if(V==null|| dist1+ldist1<Resolve_drone_path.calculate_distance(V) || dist2+ldist2<Resolve_drone_path.calculate_distance(V) ){
-            Vector<LongLat> V3 = new Vector<>();
-           if(dist3+ldist3<dist2+ldist2&&dist3+ldist3<dist1+ldist1){
-            V = A_star_modified(P,personal_mark);
-            V3 = A_star_modified(V.get(V.size()-1),Q);
-            V=extend_line_String(V,V3); }
+            Vector<LongLat> V1;
 
-            Vector<LongLat> V1 = new Vector<>();
-            if(V3==null && dist1+ldist1<dist2+ldist2){
-            V = A_star_modified(P,Landmark_1);
-            V1 = A_star_modified(V.get(V.size()-1),Q);
-            V=extend_line_String(V,V1);
-            System.out.println(V1);
+            if(dist1+ldist1<dist2+ldist2){
+            V = best_of_2(P,Landmark_1);
+
+            if(V!=null){
+            V1 = best_of_2(V.get(V.size()-1),Q);
+            V=extend_line_String(V,V1); }
+                foundpath= V != null;
             }
 
-            if(dist2+ldist2<dist1+ldist1 &&V3==null&&V1==null){
-                V = A_star_modified(P,Landmark_2);
-                Vector<LongLat> V2 = A_star_modified(V.get(V.size()-1),Q);
+             else {
+                V = best_of_2(P,Landmark_2);
+                if(V!=null){
+                Vector<LongLat> V2;
+                V2 =  best_of_2(V.get(V.size()-1),Q);
                 V=extend_line_String(V,V2);
+                foundpath= V != null && V2 != null;}
             }
-
-
+             if(!foundpath){
+               System.err.println("NO PATH FOUND!!");
+           }
 
 
             return  V;

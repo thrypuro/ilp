@@ -20,6 +20,9 @@ import org.jgrapht.graph.builder.GraphTypeBuilder;
 public class Resolve_drone_path {
     private static final HttpClient client = HttpClient.newHttpClient();
     public  static  final LongLat AT = new LongLat(-3.186874,55.944494);
+    public static ArrayList<Integer> Indexes = new ArrayList<>();
+    public static LongLat Landmark_1 = new LongLat(-3.1862,55.9457);
+    public  static LongLat Landmark_2 = new LongLat(-3.1916,55.9437);
     static class Path_Info{
         LongLat Source;
         LongLat Destination;
@@ -69,16 +72,55 @@ public class Resolve_drone_path {
         return (P.size()-1)*0.00015;
     }
 
+    public static Vector<LongLat> backtrack_path(Vector<LongLat> V, int bound, List<Integer> external_permutation, Menus m, ArrayList<Integer> costs, Vector<LongLat> dest_lola, Vector<Vector<LongLat>> rest_lola){
+        int k=1;
+        while (true){
+            int ide=costs.indexOf(Collections.min(costs));
+            System.out.println(ide);
+            ide=external_permutation.indexOf(ide);
+            external_permutation.remove(ide);
+
+            System.out.println(Collections.min(costs));
+            V =  resolve_path(external_permutation,AT,dest_lola,rest_lola);
+            if(V.size()<=bound){
+                int new_cost=0;
+                for (int i = 0; i < external_permutation.size(); i++) {
+                    int index = external_permutation.get(i)-1;
+                    new_cost += m.getDeliveryCost(Database.orders.get(index));
+                }
+                System.out.println(new_cost);
+                System.out.println(V.size());
+
+                break;
+            }
+            else {
+                k+=1;
+            }
+        }
+        return V;
+    }
 
     public static Path_Info resolve_internal_path(LongLat source, LongLat destination, Vector<LongLat> midpoints){
-        Path_Info Pinf = null;
+        Path_Info Pinf;
         ArrayList<Integer> permutation = new ArrayList<>();
+        int mov = 3;
         if(midpoints.size()==2){
             double dist1,dist2;
+            double d1,d2,d3;
+            d1 = Move_to_Point.H(source,midpoints.get(0));
+            d2 = Move_to_Point.H(midpoints.get(0),midpoints.get(1));
+            d3 = Move_to_Point.H(midpoints.get(1),destination);
 
-            dist1 = source.distanceTo(midpoints.get(0))+midpoints.get(0).distanceTo(midpoints.get(1))+midpoints.get(1).distanceTo(destination);
+            dist1 = d1+d2+d3;
 
-            dist2 = source.distanceTo(midpoints.get(1))+midpoints.get(1).distanceTo(midpoints.get(0))+midpoints.get(0).distanceTo(destination);
+            d1 = Move_to_Point.H(source,midpoints.get(1));
+            d2 = Move_to_Point.H(midpoints.get(1),midpoints.get(0));
+            d3 = Move_to_Point.H(midpoints.get(0),destination);
+
+
+
+            dist2 = d1+d2+d3;
+
 
             if(dist1<dist2){
                 permutation.add(0);
@@ -96,8 +138,11 @@ public class Resolve_drone_path {
         else {
 
             permutation.add(0);
-            double dist;
-            dist = source.distanceTo(midpoints.get(0)) + midpoints.get(0).distanceTo(destination);
+            double dist,d1,d2;
+            d1 = Move_to_Point.H(source,midpoints.get(0));
+            d2 = Move_to_Point.H(midpoints.get(0),destination);
+
+            dist =  d1+ d2;
             Pinf = new Path_Info(source,destination,permutation,dist);
 
         }
@@ -110,16 +155,13 @@ public class Resolve_drone_path {
                 .allowingSelfLoops(false).edgeClass(DefaultWeightedEdge.class).weighted(true).buildGraph();
     }
     public static Vector<Integer> resolve_external_paths(LongLat source, Vector<LongLat> dest, Vector<Vector<LongLat>> midpoints){
-
         Graph<String, DefaultWeightedEdge> completeGraph = buildEmptySimpleGraph();
         completeGraph.addVertex("v"+0);
         for (int i = 0; i < dest.size(); i++) {
             Path_Info Pinf = resolve_internal_path(source,dest.get(i),midpoints.get(i));
             completeGraph.addVertex("v"+(i+1));
-            Vector<LongLat> U = resolve_path_int(Pinf,midpoints.get(i));
-
             completeGraph.addEdge("v"+0,"v"+(i+1));
-           completeGraph.setEdgeWeight("v"+0,"v"+(i+1),calculate_distance(U));
+           completeGraph.setEdgeWeight("v"+0,"v"+(i+1), Pinf.Distance);
         }
 
         for (int i = 0; i < dest.size(); i++) {
@@ -127,16 +169,24 @@ public class Resolve_drone_path {
                 Path_Info Pinf = resolve_internal_path(dest.get(i),dest.get(j),midpoints.get(i));
                 completeGraph.addEdge("v"+(i+1),"v"+(j+1));
                 completeGraph.setEdgeWeight("v"+(i+1), "v"+(j+1),Pinf.Distance);
+
             }
 
 
          }
 
-        NearestNeighborHeuristicTSP T = new NearestNeighborHeuristicTSP("v0");
+        NearestNeighborHeuristicTSP<String,DefaultWeightedEdge> T = new NearestNeighborHeuristicTSP<>("v0");
+        GreedyHeuristicTSP<String,DefaultWeightedEdge> E = new GreedyHeuristicTSP<>();
+        List<String> T3 = T.getTour(completeGraph).getVertexList();
+        List<String> T1 = E.getTour(completeGraph).getVertexList();
 
-        List<String> T1 = T.getTour(completeGraph).getVertexList();
+        if(T.getTour(completeGraph).getWeight()<E.getTour(completeGraph).getWeight()){
+            T1 = T3;
+        }
+
         Vector<Integer> T2 = new Vector<>();
         for (String s : T1) {
+
             T2.add(Integer.valueOf(s.replace("v", "")));
         }
         // Print out the graph to be sure it's really complete
@@ -145,22 +195,13 @@ public class Resolve_drone_path {
     }
     public static Vector<LongLat> resolve_path_int(Path_Info P,Vector<LongLat> midpoints){
         Vector<LongLat> La = new Vector<>();
-        System.out.println("Hi");
-        La=move_to_point.extend_line_String(La,move_to_point.get_path(P.Source,midpoints.get(P.Permutation.get(0))));
+        La= Move_to_Point.extend_line_String(La, Move_to_Point.get_path(P.Source,midpoints.get(P.Permutation.get(0))));
         if(P.Permutation.size()==2){
-            System.out.println("aaa");
-        La=move_to_point.extend_line_String(La,move_to_point.get_path(La.get(La.size()-1),midpoints.get(P.Permutation.get(1))));
-            System.out.println(midpoints.get(P.Permutation.get(1)).longitude);
-            System.out.println(midpoints.get(P.Permutation.get(1)).latitude);}
-        System.out.println("Hi");
-
-        System.out.println(P.Destination.longitude);
-        System.out.println(P.Destination.latitude);
-
-        La=move_to_point.extend_line_String(La,move_to_point.get_path(La.get(La.size()-1),P.Destination));
+            La= Move_to_Point.extend_line_String(La, Move_to_Point.get_path(La.get(La.size()-1),midpoints.get(P.Permutation.get(1))));
+        }
 
 
-        System.out.println(La);
+        La= Move_to_Point.extend_line_String(La, Move_to_Point.get_path(La.get(La.size()-1),P.Destination));
         return La;
     }
     public static Vector<LongLat> resolve_path(List<Integer> Perm,LongLat AT,Vector<LongLat> dest_lola,Vector<Vector<LongLat>> lola){
@@ -168,17 +209,20 @@ public class Resolve_drone_path {
         int cur;
         Path_Info P = resolve_internal_path(AT,dest_lola.get(first),lola.get(first));
         Vector<LongLat> V = resolve_path_int(P,lola.get(first));
-        int rest=0;
-        for (int i = 0; i < Perm.size(); i++) {
-            System.out.println(Perm.get(i));
+        Indexes.add(V.size());
+
+        for (int i = 1; i < Perm.size(); i++) {
             cur = Perm.get(i)-1;
-            rest+=lola.get(cur).size();
             Path_Info P1 = resolve_internal_path(V.get(V.size()-1),dest_lola.get(cur),lola.get(cur));
-            System.out.println("Ha");
-            V = move_to_point.extend_line_String(V,resolve_path_int(P1,lola.get(cur)));
+            Vector<LongLat>  U = resolve_path_int(P1,lola.get(cur));
+
+            V = Move_to_Point.extend_line_String(V,U );
+            Indexes.add(V.size());
+
         }
-        V = move_to_point.extend_line_String(V,move_to_point.get_path(V.get(V.size()-1),AT));
-        System.out.println(V.size()+2+ dest_lola.size()+rest);
+        Vector<LongLat> U = Move_to_Point.get_path(V.get(V.size()-1),AT);
+        V = Move_to_Point.extend_line_String(V,U);
+        Indexes.add(V.size());
         return V;
     }
     public static void main(String[] args) {
@@ -187,13 +231,27 @@ public class Resolve_drone_path {
         Menus M = new Menus("localhost","9898");
         Menus.prepare_menus();
         Winding_number.make_Polygons();
-        Database.orders_query_date("2023-12-30");
+        int moneta = 0;
+
+        for (int date = 1; date < 32; date++) {
+
+
+            System.out.println("Day :  " + date);
+//            Database.drop_move_table();
+            String dat = "";
+            if(date<10){
+                dat = "0"+date;
+            }
+            else {
+                dat = String.valueOf(date);
+            }
+        Database.orders_query_date("2023-12-"+dat);
         Database.orders_detail_query_orders();
 
         Vector<Vector<LongLat>> rest_lola = new Vector<>();
         Vector<LongLat> dest_lola = new Vector<>();
         for (int i = 0; i < Database.orders.size(); i++) {
-            Vector<String> rest_str = new Vector<>();
+            ArrayList<String> rest_str = new ArrayList<>();
             Vector<LongLat> Current_rest = new Vector<>();
             for (int j = 0; j < Database.orders.get(i).size(); j++) {
                 String r = Menus.location.get(Database.orders.get(i).get(j));
@@ -208,15 +266,33 @@ public class Resolve_drone_path {
 
         }
         for (int i = 0; i <Database.delivery_destination.size(); i++) {
-            System.out.println(Database.delivery_destination.get(i));
              dest_lola.add(getCordinates(Database.delivery_destination.get(i)));
         }
+
 
             List<Integer> external_permutation= resolve_external_paths(AT,dest_lola,rest_lola);
         external_permutation.remove(0);
             external_permutation.remove(external_permutation.size()-1);
-        System.out.println(external_permutation);
-        System.out.println(move_to_point.make_geo_json(resolve_path(external_permutation,AT,dest_lola,rest_lola)));
+
+        Vector<LongLat> V=resolve_path(external_permutation,AT,dest_lola,rest_lola);
+        System.out.println("Moves used: "+V.size());
+        ArrayList<Integer> costs = new ArrayList<>();
+        int cos = 0;
+        for (int i = 0; i < external_permutation.size() ; i++) {
+            int co =M.getDeliveryCost(Database.orders.get(external_permutation.get(i)-1));
+            costs.add(co);
+            cos+=co;
+
+        }
+        System.out.println(cos);
+        /*  Database.create_move_table();
+          Database.write_move_table(V,external_permutation)*/;
+        if(V.size()<=1500){
+            moneta+=1;
+
+        }
+        System.out.println(Move_to_Point.make_geo_json(V));
+
 
            /* for (int i = 0; i <rest_lola.size(); i++) {
               int first=  external_permutation.get(i)-1;
@@ -230,6 +306,11 @@ Vector<LongLat> Q = resolve_internal_path(V.get(V.size()-1), dest_lola.get(first
 
         long d2=System.currentTimeMillis();
         System.out.println(d2-d1);
+
+
+
+    }
+        System.out.println(moneta);
     }
 
 }
