@@ -1,12 +1,16 @@
 package uk.ac.ed.inf;
 import java.lang.Math;
+import java.util.Vector;
 
 
-public class LongLat {
+public class LongLat implements Comparable<LongLat> {
     // double precision for float values
     public double  latitude;
     public double  longitude;
 
+
+    // distance (for priority queue purposes)
+    public double fS;
     /**
      * Constructor of the class LongLat
      * @param longitude : Longitude of the drone
@@ -37,7 +41,9 @@ public class LongLat {
         distance = Math.sqrt( Math.pow( point.longitude - longitude , 2 ) + Math.pow( point.latitude - latitude , 2 ) );
         return distance;
     }
-
+    public void setfS(double fS){
+        this.fS = fS;
+    }
     /**
      * Uses another method in the class to find if 2 places are close to eachother by calculating their distances from one another.
      * @param place : Another object of the same class we are comparing to
@@ -70,18 +76,12 @@ public class LongLat {
         LongLat new_cordinates =   new LongLat(new_longitude,new_latitude);
         return new_cordinates; }
     public LongLat shorter(int angle){
-        // Condition to check if the drone needs to hover on the same position
-        if(angle==-999){
-            // returns the same coordinate if condition true
-            return new LongLat(longitude,latitude);
-        }
         // angle has to be radians for trigonometry java functions, drone moves 0.00015 each move
         //  calculates adjacent distance of the equilateral triangle and adds it to the coordinate longitude
-        double new_longitude = longitude + ( 0.00005 * ( Math.cos(Math.toRadians(angle) ) ));
+        double new_longitude = longitude + ( 0.00009 * ( Math.cos(Math.toRadians(angle) ) ));
         // calculates the opposite distance of the equilateral triangle and adds it to the coordinates latitude
-        double new_latitude = latitude + ( 0.00005 * ( Math.sin( Math.toRadians(angle) ) ));
-        LongLat new_cordinates =   new LongLat(new_longitude,new_latitude);
-        return new_cordinates; }
+        double new_latitude = latitude + ( 0.00009 * ( Math.sin( Math.toRadians(angle) ) ));
+        return new LongLat(new_longitude,new_latitude); }
     public int angle(LongLat L){
         int a=-99;
         if(this.longitude==L.longitude && this.latitude==L.latitude){
@@ -95,34 +95,34 @@ public class LongLat {
         }
         return a;
     }
-    public LongLat calculate_midpoint(LongLat L){
-        double lo = -Math.abs(L.longitude-this.longitude);
-        double la = Math.abs(L.latitude-this.latitude);
-        lo = L.longitude + lo/2;
-        la = L.latitude + la/2;
-        LongLat LL = new LongLat(lo,la);
-        return LL;
-    }
-    public boolean is_straight_line(LongLat L){
-        LongLat LL = new LongLat(this.longitude,this.latitude);
-        int i =0;
 
-        while (!LL.closeTo(L) && i<1000) {
-            double angle=Math.toDegrees(Math.atan2((L.latitude-latitude),(L.longitude-longitude)));
-            LL.latitude = LL.latitude + ( 0.00015 * ( Math.sin( Math.toRadians(angle) ) ));
-            LL.longitude = LL.longitude + ( 0.00015 * ( Math.cos(Math.toRadians(angle) ) ));
 
-            if(Move_to_Point.in_Polygon(LL)){
-                return false;
+    public Vector<LongLat> path(LongLat Q){
+        A_star_greedy A = new A_star_greedy(new LongLat(longitude,latitude),Q,false);
+        A.get_path();
+        A_star_greedy B = new A_star_greedy(new LongLat(longitude,latitude),Q,true);
+        B.get_path();
+        if(B.path_found){
+            if(!A.path_found){
+                return B.Path;
             }
-            i+=1;
+            else if(B.size()<A.size()){
+                return B.Path;
+            }
         }
-        return true;
+        return A.Path;
     }
-    public static void main(String[] args) {
-        LongLat L = new LongLat(-3.1865508,55.9457207);
-        LongLat L1 = new LongLat(-3.1864008,55.9457207);
-        System.out.println(L1.angle(L));
+    @Override
+    public int compareTo(LongLat o) {
+        return Double.compare(this.fS, o.fS);
+    }
 
+
+
+    public static void main(String[] args) {
+        LongLat A = new LongLat(-3.185376953893118,
+                55.9446576969785);
+        LongLat B = new LongLat(-3.185332 ,55.944656 );
+        System.out.println(A.angle(B));
     }
 }

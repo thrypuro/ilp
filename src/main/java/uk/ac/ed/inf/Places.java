@@ -6,11 +6,9 @@ package uk.ac.ed.inf;
 public class Places {
     String name;
     String location;
-    menu menu[];
+    menu[] menu;
     public  static class menu{
         String item;
         int pence;
     }
-
-
 }
