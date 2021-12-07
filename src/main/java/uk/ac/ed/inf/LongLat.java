@@ -118,11 +118,4 @@ public class LongLat implements Comparable<LongLat> {
     }
 
 
-
-    public static void main(String[] args) {
-        LongLat A = new LongLat(-3.185376953893118,
-                55.9446576969785);
-        LongLat B = new LongLat(-3.185332 ,55.944656 );
-        System.out.println(A.angle(B));
-    }
 }

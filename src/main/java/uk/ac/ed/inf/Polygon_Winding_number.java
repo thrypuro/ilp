@@ -13,7 +13,7 @@ public class Polygon_Winding_number {
         Polygon_Winding_number.Pointloc P1 = new Polygon_Winding_number.Pointloc(P.longitude,P.latitude);
 
         for(int i = 0; i< Polygon_Winding_number.Polygons.size(); i++){
-            inside=inside|| Polygon_Winding_number.isInside(Polygon_Winding_number.Polygons.get(i),P1);
+            inside=inside|| isInside(Polygon_Winding_number.Polygons.get(i),P1);
         }
         return inside;
     }

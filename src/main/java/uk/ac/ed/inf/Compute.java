@@ -90,6 +90,12 @@ public class Compute {
                 .allowingSelfLoops(false).edgeClass(DefaultWeightedEdge.class).weighted(true).buildGraph();
     }
 
+    /**
+     * Calculates the TSP and returns the permutation in
+     * which the orders have to go through, in order for it
+     * to delivery
+     * @return Permutation of the order in which delivery must take place
+     */
     private static List<Integer> TSP_external_path(){
         if(customers==null){
             System.err.println("Cannot resolve paths, if the Arraylist is empty");
