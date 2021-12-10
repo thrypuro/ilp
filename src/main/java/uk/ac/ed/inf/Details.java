@@ -1,23 +1,33 @@
 package uk.ac.ed.inf;
 
+/**
+ * Class that is necessary for the gson parsing
+ */
 public class Details {
-    String country;
-    square square;
-    String nearestPlace;
-    cordinates coordinates;
-    public  static class square{
+    private String country;
+    private square square;
+    private String nearestPlace;
+    /**
+     * Class which stores the values we need from our gson query
+     */
+    public Details.coordinates coordinates;
+    private  static class square{
         southwest southwest;
         northwest northwest;
     }
-    public  static class southwest{
+    private  static class southwest{
         double lng;
         double lat;
     }
-    public  static class northwest{
+    private  static class northwest{
         double lng;
         double lat;
     }
-    public  static class cordinates{
+
+    /**
+     * Coordinates class which stores the values we need from gson
+     */
+    public  static class coordinates {
         double lng;
         double lat;
     }

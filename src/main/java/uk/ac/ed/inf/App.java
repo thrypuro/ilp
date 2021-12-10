@@ -6,28 +6,29 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Vector;
 
+/**
+ * The main method where the drone parses the arguments, and it is started!
+ */
 public class App 
 {
-
+    /**
+     * The main function of the program
+     * @param args the arguments given to the program
+     */
     public static void main( String[] args )
     {   long d1=System.currentTimeMillis();
         System.out.println(" .........DRONE START..........");
         // User arguments
         String machine = "127.0.0.1";
-        String port1 = "9898";
-        String port2 = "9899";
-        String day = "04";
-        String month = "12";
-        String year = "2023";
+        String port1 = args[0];
+        String port2 = args[1];
+        String day = args[2];
+        String month = args[3];
+        String year = args[4];
         System.out.println("Computing orders for the day:  " + day +"/"+month+"/"+year);
         // Arguments are zipped in a ArrayList to save space
-        ArrayList<String> arguments = new ArrayList<>();
-        arguments.add(machine);
-        arguments.add(port1);
-        arguments.add(port2);
-        arguments.add(day);
-        arguments.add(month);
-        arguments.add(year);
+        String[] arguments = {machine,port1,port2,day,month,year};
+
         // Stage 1 : Initialise all the necessary component
         // Make sure all the data given are correct before going through next stage
 
@@ -109,12 +110,6 @@ public class App
         System.out.println(" .............DRONE END..............");
 
         long d2 = System.currentTimeMillis();
-//        ArrayList<String> data = new ArrayList<>();
-//        data.add("deliveries");
-//        I.getWeb().request("Database-drop-table",data);
-//        data = new ArrayList<>();
-//        data.add("flightpath");
-//        I.getWeb().request("Database-drop-table",data);
         System.out.println( "Time taken : "+((d2 - d1)/1000)+"s");
     }
 }
