@@ -9,7 +9,7 @@ import java.util.Vector;
 /**
  * The main method where the drone parses the arguments, and it is started!
  */
-public class App 
+public class App
 {
     /**
      * The main function of the program
@@ -20,16 +20,16 @@ public class App
         System.out.println(" .........DRONE START..........");
         // User arguments
         String machine = "127.0.0.1";
-        String port1 = args[0];
-        String port2 = args[1];
-        String day = args[2];
-        String month = args[3];
-        String year = args[4];
+        String port1 = args[3];
+        String port2 = args[4];
+        String day = args[0];
+        String month = args[1];
+        String year = args[2];
         System.out.println("Computing orders for the day:  " + day +"/"+month+"/"+year);
         // Arguments are zipped in a ArrayList to save space
         String[] arguments = {machine,port1,port2,day,month,year};
 
-        // Stage 1 : Initialise all the necessary component
+        // Stage 1 : Initialise all the necessary components
         // Make sure all the data given are correct before going through next stage
 
         // Constructor for Initialise Class
@@ -73,11 +73,14 @@ public class App
          */
         ArrayList<Internal_path> Customers = C.getCustomers();
         List<Integer> Perm = C.getExternal_Permutation();
-        // Write to deliveries and flightpath
+        /* Write to deliveries and flightpath, the Last permutation/customer will always be AT hence we should not
+        write that to the deliveries table, and it specifies AT in flightpath.
+         */
         for (int j = 0;j< Perm.size();j++) {
             int perm =  Perm.get(j) - 1;
             Vector<LongLat> V = Customers.get(perm).Path;
             String orderno = Customers.get(perm).order_no;
+            // if it's an order, a valid orderno, that is not returning to AT
             if(perm<Perm.size()-1){
                 I.getWeb().write_deliveries_table(Customers.get(perm).order_no,Customers.get(perm).destination_location
                         ,String.valueOf(Customers.get(perm).cost),"insert into deliveries values (?, ?, ?)");
@@ -90,7 +93,9 @@ public class App
                         ,String.valueOf(V.get(i).longitude),String.valueOf(V.get(i).latitude),String.valueOf(angl),
                         String.valueOf(V.get(i+1).longitude),String.valueOf(V.get(i+1).latitude));
 
-            } if(j<Perm.size()-1){
+            }
+            // if it is not the last path, since if it is the last path, there doesn't exist a customer since (j+1)>Perm.size-1 hence out of bounds
+            if(j<Perm.size()-1){
                 // if it is not the Last Path (Appleton Tower)
                 int perm2 =  Perm.get(j+1) - 1;
                 int angl = V.get(V.size()-1).angle(Customers.get(perm2).Path.get(0));

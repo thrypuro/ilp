@@ -14,13 +14,15 @@ import java.util.Arrays;
  * making a new http thread over and over again.
  */
 public class Website {
-    // the url string for website and database
+    /*
+        site_urlString, database_urlString -> the url string for website and database
+        flight_table_created, deliveries_table_created -> specifies if the table has been created
+        flight_path_create -> all the create table commands, stored in an Array table_create
+     */
     private   static String site_urlString;
     private  static String database_urlString;
-    // specifies if the table has been created
     private static boolean flight_table_created =false;
     private static boolean deliveries_table_created =false;
-    // all the create table commands, stored in an Array table_create
     private static final String flight_path_create = "create table flightpath(orderNo char(8)," +
             "fromLongitude double," +
             "fromLatitude double," +
@@ -50,33 +52,33 @@ public class Website {
      * @return response  if the request was successful
      */
     private HttpResponse<String> get_request(String path){
-         // HttpRequest assumes that it is a GET request by default.
-         HttpRequest request = HttpRequest.newBuilder()
+        // HttpRequest assumes that it is a GET request by default.
+        HttpRequest request = HttpRequest.newBuilder()
                 .uri(URI.create(site_urlString +path))
                 .build();
         HttpResponse<String> response = null;
-            try {
-                // Sends the GET request to the site
-                 response =
-                        client.send(request, HttpResponse.BodyHandlers.ofString());
-                 if(response.statusCode()==404){
-                     System.err.println("404 Request not found!");
-                     System.exit(404);
-                 }
-
-                return response;
-            } // necessary catch statement if the request to the site failed
-            catch (IOException | InterruptedException e){
-                e.printStackTrace();
-                System.err.println("Request could not go through, check the webserver!");
-                System.exit(-1);
+        try {
+            // Sends the GET request to the site
+            response =
+                    client.send(request, HttpResponse.BodyHandlers.ofString());
+            if(response.statusCode()==404){
+                System.err.println("404 Request not found!");
+                System.exit(404);
             }
-           return response;
+
+            return response;
+        } // necessary catch statement if the request to the site failed
+        catch (IOException | InterruptedException e){
+            e.printStackTrace();
+            System.err.println("Request could not go through, check the webserver!");
+            System.exit(-1);
         }
+        return response;
+    }
 
     /**
      * Constructor which constructs the website's url and database's url
-      * @param machine1 machine or the url of the site
+     * @param machine1 machine or the url of the site
      * @param port1 the first port, port of the website
      * @param port2 the second port, port of the database
      */
@@ -104,12 +106,12 @@ public class Website {
             for (int i = 0; i < values.size(); i++) {
                 prepared_statement.setString(i+1, values.get(i));
             }
-            // only .execute if query is write else normal executeQuery, this is because sql statements can be finicky
+            // only .execute if query is write, else normal executeQuery
             if(query.equals("write")){
                 prepared_statement.execute();
             }
             else {
-            return prepared_statement.executeQuery(); }
+                return prepared_statement.executeQuery(); }
         } catch ( SQLException e) {
             e.printStackTrace();
         }
@@ -132,7 +134,7 @@ public class Website {
             e.printStackTrace();
             System.exit(-1);
         }
-       return conn;
+        return conn;
     }
 
     /**
@@ -145,9 +147,9 @@ public class Website {
         Connection conn= connect_to_database();
 
         try {
-            // standard sql statement execution
+            // sql statement execution
             Statement statement = conn.createStatement();
-           statement.execute(statement_str);
+            statement.execute(statement_str);
         }catch ( SQLException e) {
             return "Error with the Unprepared statement!";
         }
@@ -170,14 +172,12 @@ public class Website {
         // switch statement which matches by the query
         switch (query) {
             case "create" -> {
-                // additional data is not used
                 // indexes by the table
                 statement = table_create[index];
-                // executes statement
                 String result =execute_query_Unprepared(statement);
                 /*
                 assume a case when table has already been created and used beforehand, according to the specification
-                we don't want to write on top of this, hence we will drop the table  before we create the table again
+                we don't want to write on top of this, hence we will drop the table before we create the table again
                  */
                 if(!result.equals("Success")){
                     statement = "drop table "+data.get(0);
@@ -195,9 +195,8 @@ public class Website {
             }
             case "write", "select" -> {
                 // both of these cases use additional data hence, we will query the statement from it, also uses prepared statement
-                // data has to be bigger than 2 on minimum since the values are stores afterwards
+                // data has to be bigger than 2 on minimum since the values are stored afterwards
                 assert data.size()>2;
-                // the statement
                 statement = data.get(1);
                 // the values are stored in this ArrayList
                 ArrayList<String> V= new ArrayList<>();
@@ -229,7 +228,7 @@ public class Website {
                 // makes sure if we can create/drop flightpath or not
                 boolean can_query = (query.equals("create") && !flight_table_created) || ((query.equals("drop")|| query.equals("write"))  && flight_table_created);
                 if(can_query){
-                query(0, query, data);
+                    query(0, query, data);
                     flight_table_created= !query.equals("drop");
                 }
 
@@ -264,7 +263,7 @@ public class Website {
      *                        data [2-n] : Additional values needed, example: writing to database table
      * @return either the request body or Success/failure string depending on the request
      */
-    public String request(String request, ArrayList<String> Additional_data){ /// easily able to add new options and features if website changes
+    public String request(String request, ArrayList<String> Additional_data){ // easily able to add new options and features if website changes
         switch (request){
             case "Menus" ->{
                 return get_request("/menus/menus.json").body(); // menus path
@@ -308,7 +307,7 @@ public class Website {
                 System.err.println("Not a valid request!");
                 System.exit(1); }
         }
-     return "Failed to query";
+        return "Failed to query";
     }
 
     /**

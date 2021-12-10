@@ -33,7 +33,6 @@ public class Initialise {
     public static Website Web;
 
     /**
-     *
      * Getter function to get the Website Object
      * created by Initialise, to use the same object
      * amongst all the classes.
@@ -44,45 +43,45 @@ public class Initialise {
     }
 
     /**
-     * Initiates the menus hashmap to make it easier get Location
+     * Initiates the menu's hashmap to make it easier get Location
      * as well the costs when we need to calculate the cost and location
      * orders.
      */
     private void prepare_menus(){
-           // Sends a Request for the Menu, gets a response from the server
-           // no additional data needed as it doesn't require any parameters
-           String response=Web.request("Menus",null);
-           // Instantiates the two Hashmaps that gets data added to
-           HashMap<String,Integer> cost=new HashMap<>();
-           HashMap<String,String> location = new HashMap<>();
-            assert response!=null;
+        // Sends a Request for the Menu, gets a response from the server
+        // no additional data needed as it doesn't require any parameters
+        String response=Web.request("Menus",null);
+        // Instantiates the two Hashmaps that gets data added to
+        HashMap<String,Integer> cost=new HashMap<>();
+        HashMap<String,String> location = new HashMap<>();
+        assert response!=null;
             /* Initialises new GSON for parsing
                ArrayList is used, as it is an array of JSONs
                Uses TypeToken and Type for getting the type
              */
-            Gson gson = new Gson();
-            Type listType =
-                    new TypeToken<ArrayList<Places>>() {}.getType();
-            ArrayList<Places> places =
-                    gson.fromJson(response, listType);
-            // 50p Delivery charge by default
-            // Class specific iterator, cleaner to iterate
-            for(Places place : places){
-                // Takes the important field of the class
-                for(Places.menu menu : place.menu){
-                    cost.put(menu.item, menu.pence);
-                    location.put(menu.item,place.location);
-                }
+        Gson gson = new Gson();
+        Type listType =
+                new TypeToken<ArrayList<Places>>() {}.getType();
+        ArrayList<Places> places =
+                gson.fromJson(response, listType);
+        // 50p Delivery charge by default
+        // Class specific iterator, cleaner to iterate
+        for(Places place : places){
+            // Takes the important field of the class
+            for(Places.menu menu : place.menu){
+                cost.put(menu.item, menu.pence);
+                location.put(menu.item,place.location);
+            }
                 /* Setter function that sets the values that
                  will be needed for the next stage of the
                  program.
                  */
-                Compute.setCost(cost);
-                Compute.setLocation(location);
+            Compute.setCost(cost);
+            Compute.setLocation(location);
 
-    }
+        }
         System.out.println("Menus prepared!");
-}
+    }
 
     /**
      * <p>
@@ -94,43 +93,42 @@ public class Initialise {
      * data that is needed to run the algorithm. </p>
      */
     private  void make_Polygons() {
-            // Requests the Polygon Points
-            String source = Web.request("Polygon",null);
-            assert source!=null;
-            // Parses it from String to GeoJson format
-            FeatureCollection fc = FeatureCollection.fromJson(source);
-            // Polygon Variable that stores the points in the polygon in the end
-           Vector<Vector<Point_local>> Polygons = new Vector<>();
-           // assert the request went through
-           assert fc.features()!=null;
+        // Requests the Polygon Points
+        String source = Web.request("Polygon",null);
+        assert source!=null;
+        // Parses it from String to GeoJson format
+        FeatureCollection fc = FeatureCollection.fromJson(source);
+        // Polygon Variable that stores the points in the polygon in the end
+        Vector<Vector<Point_local>> Polygons = new Vector<>();
+        // assert the request went through
+        assert fc.features()!=null;
            /*
             Iterates to the geoJson file and converts it from
             features to Points that is in the form of Point
             to my Local Classes that can be used for calculation
             */
-            for (int i = 0; i < fc.features().size(); i++) {
+        for (int i = 0; i < fc.features().size(); i++) {
 
-                Vector<Point_local> Poly = new Vector<>();
-                Polygon pol = (Polygon) fc.features().get(i).geometry();
-                assert pol != null;
-                // One Polygon iteration
-                for(int j=0;j<pol.coordinates().get(0).size();j++){
-                    // get the x and y coordinates
-                    double x = pol.coordinates().get(0).get(j).coordinates().get(0);
-                    double y = pol.coordinates().get(0).get(j).coordinates().get(1);
-                    Point_local P2 = new Point_local(x,y);
-                    Poly.add(P2);
-                }
-                // Finally, add each Polygon to the collection
-                Polygons.add(Poly);
+            Vector<Point_local> Poly = new Vector<>();
+            Polygon pol = (Polygon) fc.features().get(i).geometry();
+            assert pol != null;
+            // One Polygon iteration
+            for(int j=0;j<pol.coordinates().get(0).size();j++){
+                // get the x and y coordinates
+                double x = pol.coordinates().get(0).get(j).coordinates().get(0);
+                double y = pol.coordinates().get(0).get(j).coordinates().get(1);
+                Point_local P2 = new Point_local(x,y);
+                Poly.add(P2);
             }
-            assert !Polygons.isEmpty();
+            // Finally, add each Polygon to the collection
+            Polygons.add(Poly);
+        }
+        assert !Polygons.isEmpty();
             /* Setter function that puts in the method that actually uses
             this data
              */
 
-
-            Polygon_inside_and_intersection.setPolygons(Polygons);
+        Polygon_inside_and_intersection.setPolygons(Polygons);
         System.out.println("Polygon prepared!");
     }
 
@@ -155,20 +153,20 @@ public class Initialise {
         valid_args = (Integer.parseInt(arguments[1])<=65535 && Integer.parseInt(arguments[1])>=0);
         valid_args = valid_args && (Integer.parseInt(arguments[2])<=65535 && Integer.parseInt(arguments[2])>=0);
         String dateStr = arguments[5]+"-"+arguments[4]+"-"+arguments[3];
-        // To prevent some nasty sql injection
+        // To prevent some sql injection
         try {
             DateFormat formatter = new SimpleDateFormat("yyyy-MM-dd");
             formatter.setLenient(false);
             formatter.parse(dateStr);
         } catch (ParseException e) {
             e.printStackTrace();
-           return false;
+            return false;
         }
         return valid_args;
     }
 
     /**
-     * Creates a SQL statement which queries to get a orders for the date that is asked for.
+     * Creates an SQL statement which queries to get orders for the date that is asked for.
      * @param date The date string at which we want to query from the database.
      */
     public void get_orders(String date){
@@ -209,7 +207,7 @@ public class Initialise {
     /**
      * <p>
      * Query to create the database table if it is not yet created! <br>
-     * If it is already created, attempts to drop the table in order to create it again and creates it again. </p>
+     * If it is already created, attempts to drop the table in order to create it again. </p>
      */
     public static void create_tables(){
         // Additional data for the query
@@ -230,6 +228,7 @@ public class Initialise {
      * @param arguments : An arraylist which stores all the arguments that we use for initialising
      */
     public Initialise(String[] arguments){
+        // if arguments aren't code-friendly
         if(!Sanitise_inputs(arguments)){
             System.err.println("One the values entered is not valid!");
             System.exit(1);
@@ -240,12 +239,11 @@ public class Initialise {
         String date = year+"-"+month+"-"+day;
         // Website(machine,port1,port2)
         Web = new Website(arguments[0],arguments[1],arguments[2]);
-        // prepare menu
+        // set up menus, polygons and orders
         prepare_menus();
-        // make the points in polygon
         make_Polygons();
-        // get orders
         get_orders(date);
+
         create_tables();
         status=true;
     }

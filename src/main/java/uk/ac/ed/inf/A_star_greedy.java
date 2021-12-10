@@ -16,7 +16,7 @@ public class A_star_greedy {
     LongLat goal;
     // says if path has been found or not
     boolean path_found=false;
-    // a safety measure s.t that program doesn't get stuck
+    // a safety measure s.t program doesn't get stuck
     final static int stuck_limit = 50000; // adjust this limit with the scale of the programme, a safety measure
     // the size of the path found
 
@@ -27,13 +27,13 @@ public class A_star_greedy {
     HashMap<LongLat, LongLat> cameFrom = new HashMap<>();
 
 
-    //Stores all the nodes that is going to be considered
+    //Stores all the nodes that are going to be considered
     PriorityQueue<LongLat> openSet = new PriorityQueue<>();
 
-    //Stores all the nodes that has already been considered
+    //Stores all the nodes that have already been considered
     HashSet<LongLat> closetSet = new HashSet<>();
 
-    // G-score of the nodes that has been calculated
+    // G-score of the nodes that have been calculated
     HashMap<LongLat, Double> gScore = new HashMap<>();
 
     /**
@@ -91,10 +91,10 @@ public class A_star_greedy {
      * @return  boolean which tells us if the drone can move or not
      */
     private boolean drone_can_move(LongLat current_neighbor,LongLat current){
-        // Checks if the neighboring point is in the No-fly zone
-        boolean does_it_intersect;
-        /* Checks if the line segment from Current to current_neighbor is not in
+        /* Checks if the neighboring point is in the No-fly zone
+        and the line segment from Current to current_neighbor does not intersect any of the polygons
          */
+        boolean does_it_intersect;
         does_it_intersect = Polygon_inside_and_intersection.intersect_polygon(current_neighbor,current);
         if(does_it_intersect){
             return false;
@@ -118,7 +118,7 @@ public class A_star_greedy {
      */
     private   Vector<LongLat> reconstruct_path(HashMap<LongLat, LongLat> cameFrom, LongLat current){
         // Adds the final node as our starting path
-         Vector<LongLat> final_path = new Vector<>();
+        Vector<LongLat> final_path = new Vector<>();
         final_path.add(current);
         while(true){
             // gets the parent of the current node
@@ -130,8 +130,7 @@ public class A_star_greedy {
             // adds the node to the Path at the first index (as the parent comes first)
             final_path.add(0,current);
         }
-      // returns
-      return final_path;
+        return final_path;
     }
 
     /**
@@ -191,13 +190,11 @@ public class A_star_greedy {
                 if(closetSet.stream().noneMatch(L -> L.closeTo(current_neighbor)) && !(current.fS>= tentative_fScore)){
                     // is the gScore smaller than neighbors gScore?
                     if(tentative_gScore<gScore.get(current_neighbor) ){
-                        // Add the parent of the neighbor
+                        // Add the parent,gScore of the neighbor
                         cameFrom.put(current_neighbor,current);
-                        // add the gScore of the neighbor
                         gScore.put(current_neighbor,tentative_gScore);
-                        // Greedy part of the algorithm, only using Heuristic gives us a faster but suboptimal path
+                        // f(x)= 0*g(x)+h(x) - greedy
                         current_neighbor.setfS(dist);
-                        // adds the curren neighbor into our consideration
                         openSet.add(current_neighbor);
 
                     }

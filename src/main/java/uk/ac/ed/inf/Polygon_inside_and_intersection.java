@@ -44,7 +44,7 @@ public class Polygon_inside_and_intersection {
     }
 
     /**
-     * This local class is used instead of LongLat mostly as a preference thing
+     * This local class is used instead of LongLat mostly as a preference
      * LongLat can also be used here but the reason for this choice is that
      * x and y is much better way to describe in this algorithm than latitude and
      * longitude
@@ -184,17 +184,16 @@ public class Polygon_inside_and_intersection {
      * @param R Second Point
      * @return boolean if the line segment intersects any of the lines in Polygon
      */
-   private static boolean intersect(Vector<Point_local> P, Point_local Q,Point_local R){
-       // initialising
+    private static boolean intersect(Vector<Point_local> P, Point_local Q,Point_local R){
         boolean does_intersect;
         // loop to check if it is in Pairs of Point of the Poly (i+1)mod size because, the last point and 0th point is also a line segment
-       for (int i = 0; i <P.size() ; i++) {
-           does_intersect = Line2D.linesIntersect(P.get(i).x,P.get(i).y,P.get((i+1)%P.size()).x,P.get((i+1)%P.size()).y,Q.x,Q.y,R.x,R.y);
-           if(does_intersect){
-               return true;
-           }
-       }
-       return false;
-   }
+        for (int i = 0; i <P.size() ; i++) {
+            does_intersect = Line2D.linesIntersect(P.get(i).x,P.get(i).y,P.get((i+1)%P.size()).x,P.get((i+1)%P.size()).y,Q.x,Q.y,R.x,R.y);
+            if(does_intersect){
+                return true;
+            }
+        }
+        return false;
+    }
 
 }

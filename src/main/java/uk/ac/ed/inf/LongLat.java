@@ -7,7 +7,6 @@ import java.util.Vector;
  * also has methods relevant including Points.
  */
 public class LongLat implements Comparable<LongLat> {
-    // double precision for float values
     /**
      * Latitude of the Point
      */
@@ -63,12 +62,12 @@ public class LongLat implements Comparable<LongLat> {
         this.fS = fS;
     }
     /**
-     * Uses another method in the class to find if 2 places are close to eachother by calculating their distances from one another.
+     * Uses another method in the class to find if 2 places are close to each other by calculating their distances from one another.
      * @param place : Another object of the same class we are comparing to
      * @return : Boolean of whether if it is close or not, by very small significant digits
      */
     public boolean closeTo(LongLat place){
-        // just need precision upto 7 decimal digits
+        // precision up to 7 decimal digits
         return distanceTo(place)<0.00015;
     }
 
@@ -109,7 +108,7 @@ public class LongLat implements Comparable<LongLat> {
         for (int i = 0; i < 360; i=i+10) {
             LongLat nL = L.nextPosition(i);
             if(nL.longitude==this.longitude && this.latitude==nL.latitude){
-              a = i;
+                a = i;
             }
         }
         // this condition is assurance that there is always an angle between the 2 points when used for final Path
@@ -126,12 +125,6 @@ public class LongLat implements Comparable<LongLat> {
      * @return Vector of objects of the same class which contains the path between the two points
      */
     public Vector<LongLat> path(LongLat Q){
-        /*
-        If there is going to be landmarks as safety measure it can be done here, as because of my lack of time there is no implementation
-        of this feature, but it can be added in the future if needed, it is made very easy as there is already path_found variable
-        and
-         */
-        // constructor
         A_star_greedy A = new A_star_greedy(new LongLat(longitude,latitude),Q);
         // return
         return A.get_path();

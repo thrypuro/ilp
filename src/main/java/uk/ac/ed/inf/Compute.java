@@ -19,24 +19,24 @@ import java.util.*;
  * </ul>
  */
 public class Compute {
-    // Hashmap which stores the cost of each item in the menu
-    private static HashMap<String,Integer> cost=new HashMap<>();
-    // Hashmap which stores the location of each restaurant
-    private static HashMap<String,String> location = new HashMap<>();
-    // Arraylist which stores the destination of each order
-    private static ArrayList<String> delivery_destination = new ArrayList<>();
-    // Arraylist which stores the order_no of each order
-    private static ArrayList<String> order_no = new ArrayList<>();
-    /* ArrayList which stores each customer and their info, delivery destination, order no etc.
-    The goal of this array list is to keep everything stored in one place.
+    /* cost -> Hashmap which stores the cost of each item in the menu
+       location -> Hashmap which stores the location of each restaurant
+       delivery_destination -> Arraylist which stores the destination of each order
+       order_no -> Arraylist which stores the order_no of each order
+       customers -> ArrayList which stores each customer and their info, delivery destination, order no etc.
+       The goal of customers array list is to keep everything stored in one place.
+       External_Permutation -> Stores the external permutation i.e. the order in which the drone goes about with the deliveries
+       monetary_value -> The monetary value earned by the drone
      */
+    private static HashMap<String,Integer> cost=new HashMap<>();
+    private static HashMap<String,String> location = new HashMap<>();
+    private static ArrayList<String> delivery_destination = new ArrayList<>();
+    private static ArrayList<String> order_no = new ArrayList<>();
     private static ArrayList<Internal_path> customers = new ArrayList<>();
-    // Stores the external permutation i.e. the order in which the drone goes about with the deliveries
     private List<Integer> External_Permutation;
-    // The monetary value earned by the drone
     private static int monetary_value;
     private   static  final LongLat AT = new LongLat(-3.186874,55.944494);
-
+    private static final int bound = 1500;
     /**
      * Getter function which returns all the customers.
      * @return the permutation
@@ -87,7 +87,7 @@ public class Compute {
      * @param order_no1 order number Arraylist calculated beforehand
      */
     public static void setOrder_no(ArrayList<String> order_no1) {
-       order_no = order_no1;
+        order_no = order_no1;
     }
 
     /**
@@ -137,7 +137,7 @@ public class Compute {
         if(s.equals("Successfully selected!")){
             // results will always be written to set, (if it is a prepared statement)
             ResultSet rs = web.getSet();
-            // standard sql quering
+            // standard sql query
             try {
                 while (rs.next()){
                     String item = rs.getString("item");
@@ -157,8 +157,8 @@ public class Compute {
      */
     private static Graph<Integer, DefaultWeightedEdge> buildEmptySimpleGraph()
     {return GraphTypeBuilder
-                .<Integer, DefaultWeightedEdge> undirected().allowingMultipleEdges(true)
-                .allowingSelfLoops(false).edgeClass(DefaultWeightedEdge.class).weighted(true).buildGraph();
+            .<Integer, DefaultWeightedEdge> undirected().allowingMultipleEdges(true)
+            .allowingSelfLoops(false).edgeClass(DefaultWeightedEdge.class).weighted(true).buildGraph();
     }
 
     /**
@@ -173,7 +173,7 @@ public class Compute {
             System.err.println("Cannot resolve paths, if the Arraylist is empty");
             System.exit(-1);
         }
-        // we need a complete graph in order to compute TSP, so we shall do just that
+        // we need a complete graph in order to compute TSP
         Graph<Integer, DefaultWeightedEdge> completeGraph = buildEmptySimpleGraph();
         completeGraph.addVertex(0);
         // adds all the vertices
@@ -227,8 +227,8 @@ public class Compute {
     }
 
     /**
-     * Greedy Knapsack algorithm which sorts the customers by value and removes the ones that
-     * whose ratio is lower.
+     * Greedy Knapsack algorithm which sorts the customers by value and removes the ones
+     * whose money ratio is lower.
      */
     private void remove_lowest(){
         // calculate the ratio for each customer and set them
@@ -241,7 +241,7 @@ public class Compute {
         // index for the while loop
         int i =0;
         // the upper bound we have been given
-        int M = 1500;
+        int M = bound;
         // the result/new filtered customer list that will be considered for the calculation
         ArrayList<Internal_path> new_customer = new ArrayList<>();
         // main loop of the greedy knapsack
@@ -257,7 +257,7 @@ public class Compute {
     }
 
     /**
-     * The final path is computed the whole idea of this part is to connect between the orders and check whether
+     * The final path is computed, the whole idea of this part is to connect between the orders and check whether
      * we can proceed to the final stage or not.
      * @param size the size of the customers
      * @return returns the final path if it exists and obeys all the bounds, otherwise null which means asks program to recalculate again
@@ -276,8 +276,8 @@ public class Compute {
             total_moves += customer.moves;
 
             total_cost+=customer.cost;
-            // checks if total moves below 1500
-            if(total_moves<=1500) {
+            // checks if total moves below bound
+            if(total_moves<=bound) {
                 V.addAll(customer.Path);
             }
             else{
@@ -286,7 +286,7 @@ public class Compute {
             if(i==size-1){
                 // if we reached the end, success but one last verification to see if it can actually return to AT
                 Vector<LongLat> U = customers.get(perm).Path.get(customers.get(perm).Path.size()-1).path(AT);
-                if((total_moves+ U.size()-1>1500)){
+                if((total_moves+ U.size()-1>bound)){
                     return null;
                 }
                 // if reached here successfully computed the final path
@@ -299,8 +299,8 @@ public class Compute {
             }
         }
         // monetary value computed
-         monetary_value=total_cost;
-         return V;
+        monetary_value=total_cost;
+        return V;
     }
 
     /**
@@ -308,9 +308,8 @@ public class Compute {
      * @return the total monetary value of all the orders
      */
     public int get_total_monetary_value(){
-        // total
         int total = 0;
-        // very basic loop iterating through the customers and computing the cost
+        // iterating through the customers and computing the cost
         for(Internal_path customer : customers){
             total+=customer.cost;
         }
@@ -318,8 +317,8 @@ public class Compute {
     }
 
     /**
-     * The constructor that does all the work, mentioned, it iterates through the orderno and creates
-     * a Internal path object and stores all the objects in a ArrayList
+     * The constructor that does all the work mentioned, it iterates through the orderno and creates
+     * an Internal path object and stores all the objects in a ArrayList
      * @param I  Initialise object we used earlier in the program
      */
     public Compute(Initialise I){
@@ -345,18 +344,18 @@ public class Compute {
         setSources(External_Permutation);
         Vector<LongLat> final_path=get_final_path(External_Permutation.size());
         // this loop tries to find until it finds a final path, potential to get stuck in an infinite loop if conditions are never met
-          while (final_path==null){
-              remove_lowest();
-              External_Permutation= TSP_external_path();
-              setSources(External_Permutation);
-             final_path = get_final_path(External_Permutation.size());
+        while (final_path==null){
+            remove_lowest();
+            External_Permutation= TSP_external_path();
+            setSources(External_Permutation);
+            final_path = get_final_path(External_Permutation.size());
 
-          }
+        }
         // store the results
         Path = final_path;
         // Print all the results neatly
         System.out.println("-------------------RESULTS---------------------");
-        System.out.println("Moves used :" + (Path.size()-1) + "/" + "1500");
+        System.out.println("Moves used :" + (Path.size()-1) + "/" + (bound));
         System.out.println("Money gained " +monetary_value + "/" + total_monetary_value + "  ("+ ((double) monetary_value*100/ total_monetary_value)+" %)");
         System.out.println("Orders Delivered: " + (customers.size()-1) + "/" + total_orders);
         System.out.println("----------------------------------------------");

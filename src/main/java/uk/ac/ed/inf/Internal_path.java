@@ -10,14 +10,14 @@ import java.util.Vector;
 /**
  * Class that implements information about one singular order and the midpoints between the source and
  * destination. <br>
- * It stores all the useful information about a singular order, this class is used a lot of other modules. <br>
+ * It stores all the useful information about a singular order, this class is used in a lot of other modules. <br>
  * One of the core classes
  */
 public class Internal_path implements Comparable<Internal_path>{
     // website object used to send requests internally
-     static Website web;
-    /** source of the delivery of the order
-     *
+    static Website web;
+    /**
+     *  source of the delivery of the order
      */
     public LongLat Source;
     /**
@@ -26,7 +26,6 @@ public class Internal_path implements Comparable<Internal_path>{
     public LongLat Destination;
     // the restaurants between the source and destination
     private final ArrayList<LongLat> midpoints = new ArrayList<>();
-    // the internation permutation
     private ArrayList<Integer> internal_Permutation;
     /**
      *  The path between the source, the midpoints and destination all connected
@@ -36,10 +35,9 @@ public class Internal_path implements Comparable<Internal_path>{
      * The total number of moves this takes
      */
     public int moves;
-   // the weight used if needed for greedy knapsack
-   private double weight;
+    // the weight used if needed for greedy knapsack
+    private double weight;
 
-    // Other information
     /**
      * The order number of the customer
      */
@@ -82,7 +80,7 @@ public class Internal_path implements Comparable<Internal_path>{
      * @param order_no the order number string
      * @param destination_location delivery w3w string
      * @param orders the orders made by the customer
-     * @param cost t
+     * @param cost the cost of the order
      */
     public Internal_path(String order_no, String destination_location, ArrayList<String> orders, int cost){
         // standard constructor
@@ -117,8 +115,7 @@ public class Internal_path implements Comparable<Internal_path>{
         data.add(s);
         // send request to get the info
         String response = web.request("Location",data);
-        /* Initialises new GSON for parsing
-         */
+        // Initialises new GSON for parsing
         Gson gson = new Gson();
         Details places =
                 gson.fromJson(response, Details.class);
@@ -152,13 +149,13 @@ public class Internal_path implements Comparable<Internal_path>{
         for (int i = 0; i < internal_Permutation.size(); i++) {
             int current_perm = internal_Permutation.get(i);
             if(i==0){
-              // Source -> First Midpoint path
-              current_path.addAll(Source.path(midpoints.get(current_perm)));
-              // if 2 midpoints i.e. two Shops, calculate the next perm and midpoint -> midpoint path
-              if(internal_Permutation.size()==2){
-                  int next_perm = internal_Permutation.get(i+1);
-                  current_path.addAll(current_path.get(current_path.size()-1).path(midpoints.get(next_perm)));
-              }
+                // Source -> First Midpoint path
+                current_path.addAll(Source.path(midpoints.get(current_perm)));
+                // if 2 midpoints i.e. two Shops, calculate the next perm and midpoint -> midpoint path
+                if(internal_Permutation.size()==2){
+                    int next_perm = internal_Permutation.get(i+1);
+                    current_path.addAll(current_path.get(current_path.size()-1).path(midpoints.get(next_perm)));
+                }
             }
             // if at the end of the loop Last Permutation Midpoint -> Destination
             if(i==internal_Permutation.size()-1){
@@ -184,22 +181,20 @@ public class Internal_path implements Comparable<Internal_path>{
         int k=0;
         // iterates through the midpoints
         for (int i = 0; i < midpoints.size(); i++) {
-            // temp variables
-          double temp_dist=0;
+            double temp_dist=0;
             ArrayList<Integer> temp_internal_perm= new ArrayList<>();
             // get Heuristic distance from source to midpoint
             temp_dist+=A_star_greedy.H(source, midpoints.get(i));
-            // add to temp permutation
             temp_internal_perm.add(i);
             // another loop to compare other midpoints from current midpoint to other midpoints
             for (int j = 0; j < midpoints.size(); j++) {
-             // we don't want midpoint(i) to be compared to itself
-             if(i==j){
-                 continue;
-             }  // distance between the 2 midpoints
+                // we don't want midpoint(i) to be compared to itself
+                if(i==j){
+                    continue;
+                }  // distance between the 2 midpoints
                 temp_dist+=A_star_greedy.H(midpoints.get(i), midpoints.get(j));
                 temp_internal_perm.add(j);
-              k = j;
+                k = j;
             }
             // finally, the final midpoint to the destination distance
             temp_dist+=A_star_greedy.H(midpoints.get(k),Destination);
@@ -207,7 +202,7 @@ public class Internal_path implements Comparable<Internal_path>{
             if(temp_dist<dist){
                 dist=temp_dist;
                 if(setPerm){
-                internal_Permutation = temp_internal_perm; }
+                    internal_Permutation = temp_internal_perm; }
             }
         }
 
@@ -242,12 +237,11 @@ public class Internal_path implements Comparable<Internal_path>{
      * @return A String which is converted from path to geojson format
      */
     public static String make_geo_json(Vector<LongLat> V){
-       // List of Point type used by geojson class
+        // List of Point type used by geojson class
         List<Point> Line = new ArrayList<>();
         for (LongLat longLat : V) {
             // convert LongLat class object to Point
             Point Poi = Point.fromLngLat(longLat.longitude, longLat.latitude);
-            // add to the line
             Line.add(Poi);
 
         }
